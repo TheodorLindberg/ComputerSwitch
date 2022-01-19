@@ -16,6 +16,7 @@ app = Flask(__name__)
 
 switching = False
 
+password="op"
 
 def high():
     global switching

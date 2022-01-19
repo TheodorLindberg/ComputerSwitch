@@ -14,22 +14,24 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 using OpenHardwareMonitor.Hardware;
+using System.Collections.Generic;
+using SimpleHttpServer;
 
 namespace OpenHardwareServer
 {
-
-    public class HttpServer
+  public class HttpServer
     {
-        
-        private HttpListener listener;
+    private SimpleHttpServer.HttpServer server;
+        //private HttpListener listener;
         private int listenerPort, nodeCount;
-        private Thread listenerThread;
         private Node root;
-
+    private Thread thread;
+    private SimpleHttpServer.Models.Route route;
         public HttpServer(Node node, int port)
         {
             root = node;
@@ -37,65 +39,47 @@ namespace OpenHardwareServer
 
             //JSON node count. 
             nodeCount = 0;
+            List<SimpleHttpServer.Models.Route> routes = new List<SimpleHttpServer.Models.Route>();
+      SimpleHttpServer.Models.Route route = new SimpleHttpServer.Models.Route();
+      route.Name = "Main";
+      route.Method = "GET";
+      
+      route.UrlRegex = "(?s).*";
+        route.Callable = (req) => {
+          SimpleHttpServer.Models.HttpResponse response = new SimpleHttpServer.Models.HttpResponse();
+          response.setContent(GetJSONData());
+          response.Headers.Add("Content-Type", "application/json");
 
-            try
-            {
-                listener = new HttpListener();
-                listener.IgnoreWriteExceptions = true;
+          return response;
+        };
+
+            routes.Add(route);
+
+            try {
+              server = new SimpleHttpServer.HttpServer(port, routes );
             }
             catch (PlatformNotSupportedException)
             {
-                listener = null;
+        server = null;
+              Console.WriteLine("SERVER ERROR");
             }
         }
+    public void HandleRequests() {
+      server.Listen();
+    }
 
-        public bool PlatformNotSupported
-        {
-            get
-            {
-                return listener == null;
-            }
-        }
+        public Boolean StartHTTPListener() {
+          thread = new Thread(HandleRequests);
+          thread.Start();
 
-        public Boolean StartHTTPListener()
-        {
-            if (PlatformNotSupported)
-                return false;
-
-            try
-            {
-                if (listener.IsListening)
-                    return true;
-
-                string prefix = "http://+:" + listenerPort + "/";
-                listener.Prefixes.Clear();
-                listener.Prefixes.Add(prefix);
-                listener.Start();
-
-                if (listenerThread == null)
-                {
-                    listenerThread = new Thread(HandleRequests);
-                    listenerThread.Start();
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
+      return true;
+    }
         public Boolean StopHTTPListener()
         {
-            if (PlatformNotSupported)
-                return false;
 
             try
             {
-                listenerThread.Abort();
-                listener.Stop();
-                listenerThread = null;
+        thread.Abort();
             }
             catch (HttpListenerException)
             {
@@ -112,120 +96,7 @@ namespace OpenHardwareServer
             return true;
         }
 
-        private void HandleRequests()
-        {
-
-            while (listener.IsListening)
-            {
-                var context = listener.BeginGetContext(
-                  new AsyncCallback(ListenerCallback), listener);
-                context.AsyncWaitHandle.WaitOne();
-            }
-        }
-
-        private void ListenerCallback(IAsyncResult result)
-        {
-            HttpListener listener = (HttpListener)result.AsyncState;
-            if (listener == null || !listener.IsListening)
-                return;
-
-            // Call EndGetContext to complete the asynchronous operation.
-            HttpListenerContext context;
-            try
-            {
-                context = listener.EndGetContext(result);
-            }
-            catch (Exception)
-            {
-                return;
-            }
-
-            HttpListenerRequest request = context.Request;
-
-            var requestedFile = request.RawUrl.Substring(1);
-            if (requestedFile == "data.json")
-            {
-                SendJSON(context.Response);
-                return;
-            }
-
-            if (requestedFile.Contains("images_icon"))
-            {
-                ServeResourceImage(context.Response,
-                  requestedFile.Replace("images_icon/", ""));
-                return;
-            }
-
-            // default file to be served
-            if (string.IsNullOrEmpty(requestedFile))
-                requestedFile = "index.html";
-
-            string[] splits = requestedFile.Split('.');
-            string ext = splits[splits.Length - 1];
-            ServeResourceFile(context.Response,
-               requestedFile, ext);
-        }
-
-        private void ServeResourceFile(HttpListenerResponse response, string name,
-          string ext)
-        {
-            try
-            {
-                Stream stream = System.IO.File.Open("./Resources/Web/" + name, FileMode.Open);
-
-
-                response.ContentType = GetcontentType("." + ext);
-                response.ContentLength64 = stream.Length;
-                byte[] buffer = new byte[512 * 1024];
-                int len;
-
-                Stream output = response.OutputStream;
-                while ((len = stream.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    output.Write(buffer, 0, len);
-                }
-                output.Flush();
-                output.Close();
-
-                stream.Flush();
-                stream.Close();
-                response.Close();
-            }
-            catch 
-            {
-                response.StatusCode = 404;
-                response.Close();
-                return;
-            }
-
-        }
-
-        private void ServeResourceImage(HttpListenerResponse response, string name)
-        {
-            try
-            {
-                Stream stream = System.IO.File.Open("./Resources/" + name, FileMode.Open);
-
-                Image image = Image.FromStream(stream);
-                response.ContentType = "image/png";
-
-                Stream output = response.OutputStream;
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    image.Save(ms, ImageFormat.Png);
-                    ms.WriteTo(output);
-                }
-                output.Close();
-                image.Dispose();
-                response.Close();
-            }
-            catch 
-            {
-            }
-            return;
-        }
-
-        private void SendJSON(HttpListenerResponse response)
+    private string GetJSONData()
         {
 
             string JSON = "{\"id\": 0, \"Text\": \"Sensor\", \"Children\": [";
@@ -238,25 +109,11 @@ namespace OpenHardwareServer
             JSON += ", \"ImageURL\": \"\"";
             JSON += "}";
 
-            var responseContent = JSON;
-            byte[] buffer = Encoding.UTF8.GetBytes(responseContent);
 
-            response.AddHeader("Cache-Control", "no-cache");
 
-            response.ContentLength64 = buffer.Length;
-            response.ContentType = "application/json";
+      
+      return JSON;
 
-            try
-            {
-                Stream output = response.OutputStream;
-                output.Write(buffer, 0, buffer.Length);
-                output.Close();
-            }
-            catch (HttpListenerException)
-            {
-            }
-
-            response.Close();
         }
 
         private string GenerateJSON(Node n)
@@ -413,20 +270,16 @@ namespace OpenHardwareServer
 
         ~HttpServer()
         {
-            if (PlatformNotSupported)
-                return;
 
             StopHTTPListener();
-            listener.Abort();
         }
 
         public void Quit()
         {
-            if (PlatformNotSupported)
-                return;
-
             StopHTTPListener();
-            listener.Abort();
-        }
     }
+
+
+
+}
 }

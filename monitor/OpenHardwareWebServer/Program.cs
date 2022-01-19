@@ -54,7 +54,12 @@ namespace OpenHardwareServer // Note: actual namespace depends on the project na
             Console.WriteLine("Test");
 
             HttpServer server = new HttpServer(root, 3001);
-            server.StartHTTPListener();
+      if (server.StartHTTPListener()) {
+        Console.WriteLine("Starting server");
+      }else {
+
+        Console.WriteLine("Error starting server");
+      }
             
 
             while(true)
