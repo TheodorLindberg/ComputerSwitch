@@ -70,6 +70,7 @@ namespace OpenHardwareServer
 
         public Boolean StartHTTPListener() {
           thread = new Thread(HandleRequests);
+      
           thread.Start();
 
       return true;
@@ -79,7 +80,9 @@ namespace OpenHardwareServer
 
             try
             {
-        thread.Abort();
+              thread.Abort();
+        server.IsActive = false;
+        server.Listener.Stop();
             }
             catch (HttpListenerException)
             {

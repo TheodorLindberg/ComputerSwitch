@@ -1,0 +1,26 @@
+﻿Installing assembly 'C:\Users\Theodor Lindberg\OneDrive\Skrivbord\SwitchUI\ComputerSwitch3\MonitorAppService\bin\Debug\MonitorAppService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   assemblypath = C:\Users\Theodor Lindberg\OneDrive\Skrivbord\SwitchUI\ComputerSwitch3\MonitorAppService\bin\Debug\MonitorAppService.exe
+   logfile = C:\Users\Theodor Lindberg\OneDrive\Skrivbord\SwitchUI\ComputerSwitch3\MonitorAppService\bin\Debug\MonitorAppService.InstallLog
+Installing service MonitorAppService...
+Service MonitorAppService has been successfully installed.
+Creating EventLog source MonitorAppService in log Application...
+Committing assembly 'C:\Users\Theodor Lindberg\OneDrive\Skrivbord\SwitchUI\ComputerSwitch3\MonitorAppService\bin\Debug\MonitorAppService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   assemblypath = C:\Users\Theodor Lindberg\OneDrive\Skrivbord\SwitchUI\ComputerSwitch3\MonitorAppService\bin\Debug\MonitorAppService.exe
+   logfile = C:\Users\Theodor Lindberg\OneDrive\Skrivbord\SwitchUI\ComputerSwitch3\MonitorAppService\bin\Debug\MonitorAppService.InstallLog
+Installing assembly 'C:\Users\Theodor Lindberg\OneDrive\Skrivbord\SwitchUI\ComputerSwitch3\MonitorAppService\bin\Debug\MonitorAppService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   assemblypath = C:\Users\Theodor Lindberg\OneDrive\Skrivbord\SwitchUI\ComputerSwitch3\MonitorAppService\bin\Debug\MonitorAppService.exe
+   logfile = C:\Users\Theodor Lindberg\OneDrive\Skrivbord\SwitchUI\ComputerSwitch3\MonitorAppService\bin\Debug\MonitorAppService.InstallLog
+Installing service MonitorAppService...
+Service MonitorAppService has been successfully installed.
+Creating EventLog source MonitorAppService in log Application...
+Committing assembly 'C:\Users\Theodor Lindberg\OneDrive\Skrivbord\SwitchUI\ComputerSwitch3\MonitorAppService\bin\Debug\MonitorAppService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   assemblypath = C:\Users\Theodor Lindberg\OneDrive\Skrivbord\SwitchUI\ComputerSwitch3\MonitorAppService\bin\Debug\MonitorAppService.exe
+   logfile = C:\Users\Theodor Lindberg\OneDrive\Skrivbord\SwitchUI\ComputerSwitch3\MonitorAppService\bin\Debug\MonitorAppService.InstallLog

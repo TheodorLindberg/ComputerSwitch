@@ -8,67 +8,72 @@ using System.Threading;
 
 namespace OpenHardwareServer // Note: actual namespace depends on the project name.
 {
-    internal class Program
+    public class Program
     {
-
-
-        static void Main(string[] args)
-        {
-
-            Data data = new Data();
-            data.Load();
-
-            Console.WriteLine("Hello World!");
-        }
-    }
-    class Data
-    {
+      Thread thread;
+        private bool Run = true;
+    
         private UpdateVisitor updateVisitor = new UpdateVisitor();
         public Node root;
         public TreeModel treeModel;
         public Computer computer;
-        public void Load()
-        {
+    public HttpServer server;
 
-            treeModel = new TreeModel();
-            root = new Node(System.Environment.MachineName);
-            root.Image = "computer.png";
-            
+    public void Stop(System.Diagnostics.EventLog eventLog) {
+      Run = false;
+      eventLog.WriteEntry("Stopping");
+      thread.Abort();
+      computer.Close();
+      server.StopHTTPListener();
+      eventLog.WriteEntry("Stopped");
+    }
+    public void RunApp() {
+      treeModel = new TreeModel();
+      root = new Node(System.Environment.MachineName);
+      root.Image = "computer.png";
 
 
-            treeModel.Nodes.Add(root);
 
-            computer = new Computer();
+      treeModel.Nodes.Add(root);
 
-            computer.HardwareAdded += new HardwareEventHandler(HardwareAdded);
-            computer.HardwareRemoved += new HardwareEventHandler(HardwareRemoved);
-            computer.Open();
+      computer = new Computer();
 
-            computer.MainboardEnabled = true;
-            computer.CPUEnabled = true;
-            computer.RAMEnabled = true;
-            computer.GPUEnabled = true;
-            computer.FanControllerEnabled = true;
-            computer.HDDEnabled = true;
+      computer.HardwareAdded += new HardwareEventHandler(HardwareAdded);
+      computer.HardwareRemoved += new HardwareEventHandler(HardwareRemoved);
+      computer.Open();
 
-            Console.WriteLine("Test");
+      computer.MainboardEnabled = true;
+      computer.CPUEnabled = true;
+      computer.RAMEnabled = true;
+      computer.GPUEnabled = true;
+      computer.FanControllerEnabled = true;
+      computer.HDDEnabled = true;
 
-            HttpServer server = new HttpServer(root, 3001);
+      Console.WriteLine("Test");
+
+      server = new HttpServer(root, 3001);
       if (server.StartHTTPListener()) {
         Console.WriteLine("Starting server");
-      }else {
+      } else {
 
         Console.WriteLine("Error starting server");
       }
-            
 
-            while(true)
-            {
 
-                computer.Accept(updateVisitor);
-                Thread.Sleep(100);
+      while (Run) {
 
-            }
+        computer.Accept(updateVisitor);
+        Thread.Sleep(100);
+
+      }
+    }
+    public void Start(System.Diagnostics.EventLog eventLog)
+
+      {
+
+      Console.WriteLine("Hello World!");
+      thread = new Thread(RunApp);
+      thread.Start(); 
 
 
 
